@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Azure;
 using Azure.AI.FormRecognizer;
@@ -11,16 +12,21 @@ namespace injoice
     {
         private const string ObosPdf = "https://raw.githubusercontent.com/johnkors/mariusvision/master/samplepdfs/obos/2020-01.pdf";
         private const string ReisePdf = "https://raw.githubusercontent.com/johnkors/mariusvision/master/samplepdfs/eticket/reise.pdf";
+        private const string ApplePdf = "https://raw.githubusercontent.com/johnkors/mariusvision/master/samplepdfs/apple/invoice.pdf";
 
         static async Task Main(string[] args)
         {
             var client = Authenticate("https://john-cs-formrecog-test.cognitiveservices.azure.com/", Environment.GetEnvironmentVariable("MARIUSVISION_APIKEY"));
 
-            // var response = await client.StartRecognizeReceiptsFromUriAsync(new Uri("https://raw.githubusercontent.com/johnkors/mariusvision/master/samplepdfs/obos/2020-01.pdf"));
-            // RecognizedReceiptCollection receipts = await response.WaitForCompletionAsync();
+            // var response = await client.StartRecognizeReceiptsFromUriAsync(new Uri(ApplePdf));
+            // var receipts = await response.WaitForCompletionAsync();
             // PrintReceipts(receipts);
+            
+            Console.WriteLine("*********************************************");
+            Console.WriteLine("******************CONTENT********************");
+            Console.WriteLine("*********************************************");
 
-            var response2 = await client.StartRecognizeContentFromUriAsync(new Uri(ObosPdf));
+            var response2 = await client.StartRecognizeContentFromUriAsync(new Uri(ApplePdf));
             var stuff = await response2.WaitForCompletionAsync();
             PrintStuff(stuff);
         }
@@ -35,9 +41,11 @@ namespace injoice
                 {
                     var table = page.Tables[i];
                     Console.WriteLine($"Table {i} has {table.RowCount} rows an {table.ColumnCount} columns.");
-                    foreach (var cell in table.Cells)
+                    var grouped = table.Cells.GroupBy(c => c.RowIndex);
+                    foreach (var cell in grouped)
                     {
-                        Console.WriteLine($"    Cell ({cell.RowIndex}, {cell.ColumnIndex}) contains text: '{cell.Text}'.");
+                        var values = string.Join(",",cell.Select(c => c.Text));
+                        Console.WriteLine($"{values}");
                     }
                 }
             }
